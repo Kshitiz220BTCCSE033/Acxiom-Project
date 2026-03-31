@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --bg2: #1a1916;
+    --bg3: #242220;
+    --panel: #1f1e1b;
+    --border: #2e2c28;
+    --gold: #c9a84c;
+    --gold2: #e8c97a;
+    --cream: #f0ead8;
+    --text: #e8e2d0;
+    --muted: #7a7468;
+    --error: #c0392b;
+    --success: #2ecc71;
+    --warn: #e67e22;
+    --radius: 4px;
+    --sidebar-w: 200px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  h1,h2,h3 { font-family: 'Playfair Display', serif; }
+
+  /* ── APP SHELL ── */
+  #app { min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── LOGIN ── */
+  .login-wrap {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 60% 30%, #1f1a0e 0%, #0f0e0c 70%);
+  }
+  .login-card {
+    width: 380px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 48px 40px;
+    position: relative;
+  }
+  .login-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .login-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .login-subtitle { color: var(--muted); font-size: 13px; margin-bottom: 36px; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+    border-radius: var(--radius); outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); }
+  .form-group.error input, .form-group.error select { border-color: var(--error); }
+  .form-error { color: var(--error); font-size: 12px; margin-top: 4px; display: none; }
+  .form-group.error .form-error { display: block; }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group.non-edit input, .form-group.non-edit select { background: var(--bg2); color: var(--muted); cursor: not-allowed; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px; padding: 10px 22px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    letter-spacing: 0.4px; cursor: pointer; border: none;
+    border-radius: var(--radius); transition: all 0.2s;
+  }
+  .btn-gold { background: var(--gold); color: #1a1207; }
+  .btn-gold:hover { background: var(--gold2); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-danger { background: var(--error); color: #fff; }
+  .btn-danger:hover { background: #e74c3c; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-full { width: 100%; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .login-tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .login-tab {
+    flex: 1; padding: 10px; text-align: center; cursor: pointer;
+    font-size: 13px; color: var(--muted); border-bottom: 2px solid transparent;
+    transition: all 0.2s; margin-bottom: -1px;
+  }
+  .login-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 56px;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .topbar-logo { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--gold); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .user-badge {
+    background: var(--bg3); border: 1px solid var(--border);
+    padding: 4px 12px; border-radius: 20px; font-size: 12px; color: var(--muted);
+  }
+  .user-badge span { color: var(--gold); font-weight: 500; }
+
+  /* ── MAIN LAYOUT ── */
+  .main-layout { display: flex; flex: 1; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 16px 0;
+  }
+  .sidebar-section { margin-bottom: 8px; }
+  .sidebar-section-title {
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); padding: 6px 20px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px; cursor: pointer; color: var(--muted);
+    font-size: 13px; transition: all 0.15s; border-left: 2px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,168,76,0.06); }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; padding: 28px 32px; overflow-y: auto; }
+  .content-header { margin-bottom: 24px; }
+  .content-title { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--cream); }
+  .content-subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  }
+  .card-title { font-size: 15px; font-weight: 500; margin-bottom: 16px; color: var(--cream); }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; padding: 10px 14px;
+    font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+  tbody td { padding: 11px 14px; font-size: 13px; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .badge-available { background: rgba(46,204,113,0.15); color: var(--success); }
+  .badge-issued { background: rgba(230,126,34,0.15); color: var(--warn); }
+  .badge-overdue { background: rgba(192,57,43,0.15); color: var(--error); }
+  .badge-active { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .badge-inactive { background: rgba(122,116,104,0.15); color: var(--muted); }
+
+  /* ── GRID FORMS ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  .form-grid .form-group.full { grid-column: 1 / -1; }
+
+  /* ── RADIO GROUP ── */
+  .radio-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .radio-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius);
+    cursor: pointer; transition: all 0.15s; font-size: 13px; color: var(--muted);
+  }
+  .radio-label input { accent-color: var(--gold); }
+  .radio-label:has(input:checked) { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.06); }
+
+  /* ── CHECKBOX ── */
+  .check-label {
+    display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px;
+  }
+  .check-label input[type=checkbox] { accent-color: var(--gold); width: 16px; height: 16px; }
+
+  /* ── ALERT / MESSAGE ── */
+  .alert {
+    padding: 12px 16px; border-radius: var(--radius); font-size: 13px;
+    margin-bottom: 16px; display: none;
+  }
+  .alert.show { display: flex; align-items: center; gap: 10px; }
+  .alert-error { background: rgba(192,57,43,0.12); border: 1px solid rgba(192,57,43,0.3); color: #e57373; }
+  .alert-success { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); color: var(--success); }
+  .alert-info { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); color: var(--gold2); }
+
+  /* ── SEARCH BAR ── */
+  .search-bar {
+    display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .search-bar input, .search-bar select {
+    padding: 9px 14px; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+    border-radius: var(--radius); outline: none;
+  }
+  .search-bar input:focus, .search-bar select:focus { border-color: var(--gold); }
+  .search-bar input { min-width: 220px; }
+
+  /* ── HOME CARDS ── */
+  .home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .home-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 20px; cursor: pointer;
+    transition: all 0.2s; text-align: center;
+  }
+  .home-card:hover { border-color: var(--gold); background: var(--bg3); transform: translateY(-2px); }
+  .home-card-icon { font-size: 28px; margin-bottom: 12px; }
+  .home-card-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .home-card-label span { display: block; font-size: 18px; font-family: 'Playfair Display', serif; color: var(--cream); margin-bottom: 4px; }
+
+  /* ── STATS ── */
+  .stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat-box {
+    flex: 1; min-width: 120px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 20px;
+  }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+  .stat-value { font-size: 28px; font-family: 'Playfair Display', serif; color: var(--gold); margin-top: 4px; }
+
+  /* ── CONFIRMATION / CANCEL ── */
+  .result-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 60vh; gap: 16px; text-align: center;
+  }
+  .result-icon { font-size: 64px; }
+  .result-title { font-family: 'Playfair Display', serif; font-size: 28px; }
+  .result-msg { color: var(--muted); max-width: 340px; }
+
+  /* ── PRODUCT DETAILS in SIDEBAR ── */
+  .cat-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px;
+    background: rgba(201,168,76,0.12); color: var(--gold);
+    margin: 2px; font-weight: 500;
+  }
+
+  /* ── FINE ROW ── */
+  .fine-row { background: rgba(192,57,43,0.07); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .content { padding: 16px; }
+  }
+
+  /* ── ANIMATIONS ── */
+  .fade-in { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ════════════════════════════════ LOGIN PAGE ════════════════════════════════ -->
+<div class="page active" id="page-login">
+  <div class="login-wrap">
+    <div class="login-card fade-in">
+      <div class="login-logo">📚 LibraryMS</div>
+      <div class="login-subtitle">Library Management System</div>
+      <div class="login-tabs">
+        <div class="login-tab active" onclick="setLoginType('admin')">Admin</div>
+        <div class="login-tab" onclick="setLoginType('user')">User</div>
+      </div>
+      <div id="login-alert" class="alert alert-error">Invalid credentials. Please try again.</div>
+      <div class="form-group" id="fg-userid">
+        <label>User ID</label>
+        <input type="text" id="login-userid" placeholder="Enter User ID" autocomplete="off">
+        <span class="form-error">User ID is required</span>
+      </div>
+      <div class="form-group" id="fg-password">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter Password">
+        <span class="form-error">Password is required</span>
+      </div>
+      <div style="margin-top:8px;margin-bottom:20px;font-size:12px;color:var(--muted)">
+        Admin: <code style="color:var(--gold)">adm / adm</code> &nbsp;|&nbsp; User: <code style="color:var(--gold)">user / user</code>
+      </div>
+      <button class="btn btn-gold btn-full" onclick="doLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ MAIN APP ════════════════════════════════ -->
+<div class="page" id="page-app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">📚 LibraryMS</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">Logged in as: <span id="user-name-badge">Admin</span></div>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Main</div>
+        <div class="nav-item active" onclick="navigate('home')"><span class="nav-icon">🏠</span> Home</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Transactions</div>
+        <div class="nav-item" onclick="navigate('book-available')"><span class="nav-icon">🔍</span> Book Available</div>
+        <div class="nav-item" onclick="navigate('book-issue')"><span class="nav-icon">📤</span> Issue Book</div>
+        <div class="nav-item" onclick="navigate('return-book')"><span class="nav-icon">📥</span> Return Book</div>
+        <div class="nav-item" onclick="navigate('pay-fine')"><span class="nav-icon">💰</span> Pay Fine</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Reports</div>
+        <div class="nav-item" onclick="navigate('report-books')"><span class="nav-icon">📖</span> Books List</div>
+        <div class="nav-item" onclick="navigate('report-movies')"><span class="nav-icon">🎬</span> Movies List</div>
+        <div class="nav-item" onclick="navigate('report-memberships')"><span class="nav-icon">🪪</span> Memberships</div>
+        <div class="nav-item" onclick="navigate('report-active-issues')"><span class="nav-icon">📋</span> Active Issues</div>
+        <div class="nav-item" onclick="navigate('report-overdue')"><span class="nav-icon">⚠️</span> Overdue Returns</div>
+        <div class="nav-item" onclick="navigate('report-requests')"><span class="nav-icon">📬</span> Issue Requests</div>
+      </div>
+      <div class="sidebar-section" id="admin-nav" style="display:none">
+        <div class="sidebar-section-title">Maintenance</div>
+        <div class="nav-item" onclick="navigate('add-membership')"><span class="nav-icon">➕</span> Add Membership</div>
+        <div class="nav-item" onclick="navigate('update-membership')"><span class="nav-icon">✏️</span> Update Membership</div>
+        <div class="nav-item" onclick="navigate('add-book')"><span class="nav-icon">➕</span> Add Book/Movie</div>
+        <div class="nav-item" onclick="navigate('update-book')"><span class="nav-icon">✏️</span> Update Book/Movie</div>
+        <div class="nav-item" onclick="navigate('user-management')"><span class="nav-icon">👤</span> User Management</div>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content" id="content-area">
+      <!-- Sections injected via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ LOGOUT PAGE ════════════════════════════════ -->
+<div class="page" id="page-logout">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+    <div class="result-screen fade-in">
+      <div class="result-icon">👋</div>
+      <div class="result-title" style="color:var(--gold)">Logged Out</div>
+      <div class="result-msg">You have successfully logged out.</div>
+      <button class="btn btn-gold" onclick="goToLogin()">Back to Login</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ══════════════════════════════════════
+// DATA STORE
+// ══════════════════════════════════════
+const DB = {
+  users: [
+    { id: 'adm', pass: 'adm', name: 'Administrator', role: 'admin', active: true },
+    { id: 'user', pass: 'user', name: 'Library User', role: 'user', active: true }
+  ],
+  categories: ['Science','Economics','Fiction','Children','Personal Development'],
+  books: [
+    { serial:'SC(B)000001', name:'Cosmos', author:'Carl Sagan', category:'Science', type:'book', status:'Available', cost:450, procDate:'2020-01-15' },
+    { serial:'SC(B)000002', name:'A Brief History of Time', author:'Stephen Hawking', category:'Science', type:'book', status:'Issued', cost:380, procDate:'2019-06-10' },
+    { serial:'EC(B)000001', name:'Freakonomics', author:'Steven Levitt', category:'Economics', type:'book', status:'Available', cost:320, procDate:'2021-03-20' },
+    { serial:'FC(B)000001', name:'The Great Gatsby', author:'F. Scott Fitzgerald', category:'Fiction', type:'book', status:'Available', cost:250, procDate:'2018-11-05' },
+    { serial:'FC(B)000002', name:'1984', author:'George Orwell', category:'Fiction', type:'book', status:'Available', cost:280, procDate:'2018-11-05' },
+    { serial:'CH(B)000001', name:"Charlotte's Web", author:'E.B. White', category:'Children', type:'book', status:'Issued', cost:180, procDate:'2022-02-14' },
+    { serial:'PD(B)000001', name:'Atomic Habits', author:'James Clear', category:'Personal Development', type:'book', status:'Available', cost:400, procDate:'2022-07-01' },
+    { serial:'SC(M)000001', name:'Interstellar', author:'Christopher Nolan', category:'Science', type:'movie', status:'Available', cost:600, procDate:'2020-05-10' },
+    { serial:'FC(M)000001', name:'The Shawshank Redemption', author:'Frank Darabont', category:'Fiction', type:'movie', status:'Available', cost:550, procDate:'2019-08-22' }
+  ],
+  memberships: [
+    { id:'MEM0001', firstName:'Arjun', lastName:'Sharma', contact:'9876543210', address:'12 Main St, Delhi', aadhar:'1234-5678-9012', start:'2024-01-01', end:'2025-07-01', duration:'6months', status:'Active', fine:0 },
+    { id:'MEM0002', firstName:'Priya', lastName:'Mehta', contact:'9876543211', address:'45 Park Ave, Mumbai', aadhar:'2345-6789-0123', start:'2024-03-01', end:'2026-03-01', duration:'2years', status:'Active', fine:50 },
+    { id:'MEM0003', firstName:'Ravi', lastName:'Kumar', contact:'9876543212', address:'78 Lake Rd, Bangalore', aadhar:'3456-7890-1234', start:'2023-01-01', end:'2024-01-01', duration:'1year', status:'Inactive', fine:0 }
+  ],
+  issues: [
+    { serial:'SC(B)000002', bookName:'A Brief History of Time', memberId:'MEM0001', issueDate:'2025-03-01', returnDate:'2025-03-16', remarks:'', status:'active' },
+    { serial:'CH(B)000001', bookName:"Charlotte's Web", memberId:'MEM0002', issueDate:'2025-02-10', returnDate:'2025-02-25', remarks:'', status:'overdue' }
+  ],
+  requests: [
+    { memberId:'MEM0001', bookName:'Cosmos', requestDate:'2026-03-25', fulfilledDate:'' },
+    { memberId:'MEM0003', bookName:'1984', requestDate:'2026-03-28', fulfilledDate:'2026-03-29' }
+  ]
+};
+
+let currentUser = null;
+let currentLoginType = 'admin';
+
+// ══════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════
+function setLoginType(type) {
+  currentLoginType = type;
+  document.querySelectorAll('.login-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0&&type==='admin')||(i===1&&type==='user'));
+  });
+  clearAlert('login-alert');
+}
+
+function doLogin() {
+  const uid = document.getElementById('login-userid').value.trim();
+  const pwd = document.getElementById('login-password').value;
+  let valid = true;
+  setFieldError('fg-userid', !uid);
+  setFieldError('fg-password', !pwd);
+  if (!uid || !pwd) return;
+
+  const user = DB.users.find(u => u.id === uid && u.pass === pwd && u.role === currentLoginType && u.active);
+  if (!user) { showAlert('login-alert'); return; }
+
+  currentUser = user;
+  clearAlert('login-alert');
+  document.getElementById('user-name-badge').textContent = user.name + (user.role==='admin'?' (Admin)':' (User)');
+  document.getElementById('admin-nav').style.display = user.role==='admin' ? 'block' : 'none';
+  showPage('page-app');
+  navigate('home');
+}
+
+function doLogout() { showPage('page-logout'); }
+function goToLogin() {
+  currentUser = null;
+  document.getElementById('login-userid').value = '';
+  document.getElementById('login-password').value = '';
+  showPage('page-login');
+}
+
+// ══════════════════════════════════════
+// PAGE ROUTING
+// ══════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function navigate(section) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const nav = document.querySelector(`.nav-item[onclick*="${section}"]`);
+  if (nav) nav.classList.add('active');
+  const area = document.getElementById('content-area');
+  area.innerHTML = '';
+  const fn = sections[section];
+  if (fn) { area.appendChild(fn()); area.classList.add('fade-in'); }
+}
+
+// ══════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════
+function showAlert(id) { document.getElementById(id).classList.add('show'); }
+function clearAlert(id) { const el=document.getElementById(id); if(el) el.classList.remove('show'); }
+function setFieldError(id, hasError) {
+  const el=document.getElementById(id); if(el) el.classList.toggle('error', hasError);
+}
+function el(tag, cls, html='') {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html) e.innerHTML = html;
+  return e;
+}
+function div(cls, html='') { return el('div', cls, html); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function addDays(d, n) {
+  const dt = new Date(d); dt.setDate(dt.getDate()+n); return dt.toISOString().split('T')[0];
+}
+function daysDiff(d1, d2) {
+  return Math.floor((new Date(d2)-new Date(d1))/(1000*60*60*24));
+}
+function calcFine(returnDate) {
+  const diff = daysDiff(returnDate, today());
+  return diff > 0 ? diff * 5 : 0; // Rs 5 per day
+}
+function nextId(prefix, list, field='id') {
+  const nums = list.map(x => parseInt((x[field]||'').replace(prefix,''))||0);
+  return prefix + String(Math.max(0,...nums)+1).padStart(4,'0');
+}
+function statusBadge(s) {
+  const map = { Available:'badge-available', Issued:'badge-issued', Overdue:'badge-overdue', Active:'badge-active', Inactive:'badge-inactive', active:'badge-active', overdue:'badge-overdue' };
+  return `<span class="badge ${map[s]||''}">${s}</span>`;
+}
+function formGroup(label, inputHtml, id, nonEdit=false, err='') {
+  return `<div class="form-group${nonEdit?' non-edit':''}" id="${id}">
+    <label>${label}</label>${inputHtml}
+    ${err?`<span class="form-error">${err}</span>`:''}
+  </div>`;
+}
+function textInput(id, val='', placeholder='', disabled=false) {
+  return `<input type="text" id="${id}" value="${val}" placeholder="${placeholder}"${disabled?' disabled':''}>`;
+}
+function dateInput(id, val='', disabled=false) {
+  return `<input type="date" id="${id}" value="${val}"${disabled?' disabled':''}>`;
+}
+function selectInput(id, options, sel='', disabled=false) {
+  const opts = options.map(o => `<option value="${o}" ${o===sel?'selected':''}>${o}</option>`).join('');
+  return `<select id="${id}"${disabled?' disabled':''}><option value="">-- Select --</option>${opts}</select>`;
+}
+
+function makeForm(fields, submitLabel, onSubmit, alertId) {
+  const wrap = div('card');
+  let html = `<div id="${alertId}" class="alert alert-error"></div><div class="form-grid">`;
+  fields.forEach(f => {
+    html += formGroup(f.label, f.input, f.id, f.nonEdit||false, f.err||'Required');
+    if (f.full) html = html.replace('form-group', 'form-group full');
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+  const btn = el('button', 'btn btn-gold', submitLabel);
+  btn.style.marginTop='16px';
+  btn.addEventListener('click', onSubmit);
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+// ══════════════════════════════════════
+// SECTIONS
+// ══════════════════════════════════════
+const sections = {};
+
+// HOME
+sections['home'] = () => {
+  const isAdmin = currentUser.role==='admin';
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header">
+      <div class="content-title">${isAdmin ? 'Admin' : 'User'} Home Page</div>
+      <div class="content-subtitle">Welcome back, ${currentUser.name}</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-label">Total Books</div><div class="stat-value">${DB.books.filter(b=>b.type==='book').length}</div></div>
+      <div class="stat-box"><div class="stat-label">Total Movies</div><div class="stat-value">${DB.books.filter(b=>b.type==='movie').length}</div></div>
+      <div class="stat-box"><div class="stat-label">Active Issues</div><div class="stat-value">${DB.issues.filter(i=>i.status==='active').length}</div></div>
+      <div class="stat-box"><div class="stat-label">Overdue</div><div class="stat-value" style="color:var(--error)">${DB.issues.filter(i=>i.status==='overdue').length}</div></div>
+      <div class="stat-box"><div class="stat-label">Members</div><div class="stat-value">${DB.memberships.filter(m=>m.status==='Active').length}</div></div>
+    </div>
+    <div class="card-title" style="margin-bottom:12px;">Product Details</div>
+    <div class="card">
+      <table><thead><tr><th>Code Range</th><th>Category</th></tr></thead><tbody>
+        <tr><td>SC(B/M)000001 – SC(B/M)000004</td><td><span class="cat-badge">Science</span></td></tr>
+        <tr><td>EC(B/M)000001 – EC(B/M)000004</td><td><span class="cat-badge">Economics</span></td></tr>
+        <tr><td>FC(B/M)000001 – FC(B/M)000004</td><td><span class="cat-badge">Fiction</span></td></tr>
+        <tr><td>CH(B/M)000001 – CH(B/M)000004</td><td><span class="cat-badge">Children</span></td></tr>
+        <tr><td>PD(B/M)000001 – PD(B/M)000004</td><td><span class="cat-badge">Personal Development</span></td></tr>
+      </tbody></table>
+    </div>
+  `;
+  return wrap;
+};
+
+// BOOK AVAILABLE
+sections['book-available'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header">
+      <div class="content-title">Book Availability</div>
+      <div class="content-subtitle">Search books and movies in the library</div>
+    </div>
+    <div id="avail-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Enter Book / Movie Name</label>
+          ${selectInput('avail-name', [...new Set(DB.books.map(b=>b.name))])}
+        </div>
+        <div class="form-group">
+          <label>Enter Author</label>
+          ${selectInput('avail-author', [...new Set(DB.books.map(b=>b.author))])}
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="searchBooks()">Search Availability</button>
+    </div>
+    <div id="search-results"></div>
+  `;
+  return wrap;
+};
+
+function searchBooks() {
+  const name = document.getElementById('avail-name').value;
+  const author = document.getElementById('avail-author').value;
+  if (!name && !author) {
+    const al = document.getElementById('avail-alert');
+    al.textContent = 'Please select at least a Book Name or Author before searching.';
+    al.classList.add('show');
+    return;
+  }
+  clearAlert('avail-alert');
+  const results = DB.books.filter(b => {
+    return (!name || b.name===name) && (!author || b.author===author);
+  });
+  const res = document.getElementById('search-results');
+  if (!results.length) { res.innerHTML = `<div class="alert alert-info show">No books found matching your search criteria.</div>`; return; }
+  let rows = results.map(b => `<tr>
+    <td>${b.name}</td><td>${b.author}</td><td>${b.serial}</td>
+    <td>${statusBadge(b.status)}</td>
+    <td>${b.status==='Available'?`<input type="radio" name="sel-book" value="${b.serial}" style="accent-color:var(--gold)">`:''}</td>
+  </tr>`).join('');
+  res.innerHTML = `<div class="card">
+    <div class="card-title">Search Results</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Book Name</th><th>Author</th><th>Serial No</th><th>Available</th><th>Select</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <button class="btn btn-gold" style="margin-top:16px" onclick="proceedToIssue()">Proceed to Issue</button>
+  </div>`;
+}
+
+function proceedToIssue() {
+  const sel = document.querySelector('input[name="sel-book"]:checked');
+  if (!sel) { alert('Please select an available book to issue.'); return; }
+  navigate('book-issue');
+  setTimeout(() => {
+    const el = document.getElementById('issue-serial');
+    if (el) {
+      el.value = sel.value;
+      const book = DB.books.find(b=>b.serial===sel.value);
+      if (book) {
+        const n = document.getElementById('issue-name'); if(n) n.value = book.name;
+        const a = document.getElementById('issue-author'); if(a) a.value = book.author;
+      }
+    }
+  }, 50);
+}
+
+// BOOK ISSUE
+sections['book-issue'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header">
+      <div class="content-title">Issue Book</div>
+    </div>
+    <div id="issue-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group" id="fg-issue-name">
+          <label>Book / Movie Name</label>
+          ${selectInput('issue-name', DB.books.map(b=>b.name))}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group non-edit" id="fg-issue-author">
+          <label>Author Name (auto-populated)</label>
+          <input type="text" id="issue-author" disabled placeholder="Auto-populated">
+        </div>
+        <div class="form-group" id="fg-issue-serial">
+          <label>Serial Number</label>
+          ${selectInput('issue-serial', DB.books.filter(b=>b.status==='Available').map(b=>b.serial))}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group" id="fg-issue-member">
+          <label>Membership ID</label>
+          ${selectInput('issue-member', DB.memberships.filter(m=>m.status==='Active').map(m=>m.id))}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group" id="fg-issue-date">
+          <label>Issue Date (cannot be before today)</label>
+          <input type="date" id="issue-date" value="${today()}" min="${today()}">
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group" id="fg-return-date">
+          <label>Return Date (auto: 15 days, max 15 days)</label>
+          <input type="date" id="issue-return" value="${addDays(today(),15)}" max="${addDays(today(),15)}">
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group full">
+          <label>Remarks (Optional)</label>
+          <textarea id="issue-remarks" placeholder="Optional remarks..."></textarea>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="submitIssue()">Confirm Issue</button>
+      <button class="btn btn-outline" style="margin-left:10px" onclick="navigate('transactions-home')">Cancel</button>
+    </div>
+  `;
+  // auto-populate author on name change
+  document.getElementById('issue-name').addEventListener('change', function() {
+    const book = DB.books.find(b=>b.name===this.value);
+    document.getElementById('issue-author').value = book ? book.author : '';
+    const serials = DB.books.filter(b=>b.name===this.value&&b.status==='Available').map(b=>b.serial);
+    const sel = document.getElementById('issue-serial');
+    sel.innerHTML = '<option value="">-- Select --</option>' + serials.map(s=>`<option value="${s}">${s}</option>`).join('');
+  });
+  document.getElementById('issue-date').addEventListener('change', function() {
+    const ret = document.getElementById('issue-return');
+    ret.value = addDays(this.value, 15);
+    ret.max = addDays(this.value, 15);
+  });
+  return wrap;
+};
+
+function submitIssue() {
+  const name = document.getElementById('issue-name').value;
+  const serial = document.getElementById('issue-serial').value;
+  const member = document.getElementById('issue-member').value;
+  const idate = document.getElementById('issue-date').value;
+  const rdate = document.getElementById('issue-return').value;
+  let ok = true;
+  [['fg-issue-name',name],['fg-issue-serial',serial],['fg-issue-member',member],['fg-issue-date',idate]].forEach(([id,v])=>{
+    setFieldError(id,!v); if(!v) ok=false;
+  });
+  if(!ok) return;
+  if (daysDiff(today(), idate) < 0) { showAlertMsg('issue-alert','Issue date cannot be before today.'); return; }
+  if (rdate && daysDiff(idate, rdate) > 15) { showAlertMsg('issue-alert','Return date cannot be more than 15 days from issue date.'); return; }
+  // Update book status
+  const book = DB.books.find(b=>b.serial===serial);
+  if (book) book.status = 'Issued';
+  DB.issues.push({ serial, bookName:name, memberId:member, issueDate:idate, returnDate:rdate||addDays(idate,15), remarks:document.getElementById('issue-remarks').value, status:'active' });
+  showConfirmation('Book issued successfully!', `${name} issued to ${member}. Return by ${rdate||addDays(idate,15)}.`);
+}
+
+// RETURN BOOK
+sections['return-book'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header">
+      <div class="content-title">Return Book</div>
+    </div>
+    <div id="return-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group" id="fg-ret-name">
+          <label>Book / Movie Name</label>
+          ${selectInput('ret-name', [...new Set(DB.issues.map(i=>i.bookName))])}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group non-edit">
+          <label>Author (auto-populated)</label>
+          <input type="text" id="ret-author" disabled>
+        </div>
+        <div class="form-group" id="fg-ret-serial">
+          <label>Serial No. (Mandatory)</label>
+          ${selectInput('ret-serial', DB.issues.map(i=>i.serial))}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group non-edit">
+          <label>Issue Date (auto-populated)</label>
+          <input type="date" id="ret-issue-date" disabled>
+        </div>
+        <div class="form-group" id="fg-ret-date">
+          <label>Actual Return Date</label>
+          <input type="date" id="ret-date" value="${today()}">
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group full">
+          <label>Remarks (Optional)</label>
+          <textarea id="ret-remarks"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="submitReturn()">Confirm Return</button>
+      <button class="btn btn-outline" style="margin-left:10px" onclick="cancelTx()">Cancel</button>
+    </div>
+  `;
+  document.getElementById('ret-name').addEventListener('change', function() {
+    const issue = DB.issues.find(i=>i.bookName===this.value);
+    if (issue) {
+      document.getElementById('ret-issue-date').value = issue.issueDate;
+      document.getElementById('ret-serial').value = issue.serial;
+      const book = DB.books.find(b=>b.serial===issue.serial);
+      document.getElementById('ret-author').value = book ? book.author : '';
+    }
+  });
+  return wrap;
+};
+
+function submitReturn() {
+  const name = document.getElementById('ret-name').value;
+  const serial = document.getElementById('ret-serial').value;
+  const retDate = document.getElementById('ret-date').value;
+  let ok = true;
+  [['fg-ret-name',name],['fg-ret-serial',serial],['fg-ret-date',retDate]].forEach(([id,v])=>{setFieldError(id,!v);if(!v)ok=false;});
+  if (!ok) return;
+  // Route to pay fine
+  const issue = DB.issues.find(i=>i.serial===serial);
+  if (issue) {
+    issue.actualReturn = retDate;
+    issue._pendingReturn = true;
+  }
+  navigate('pay-fine');
+  setTimeout(()=>{
+    if (issue) {
+      const f = (id,v) => { const e=document.getElementById(id); if(e) e.value=v; };
+      f('fine-name', name);
+      f('fine-serial', serial);
+      f('fine-issue-date', issue.issueDate);
+      f('fine-return-date', issue.returnDate);
+      f('fine-actual-return', retDate);
+      const fine = calcFine(issue.returnDate);
+      const fc = document.getElementById('fine-calculated');
+      if(fc) fc.value = fine > 0 ? `Rs. ${fine}` : '0';
+    }
+  },60);
+}
+
+// PAY FINE
+sections['pay-fine'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header">
+      <div class="content-title">Pay Fine</div>
+    </div>
+    <div id="fine-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group non-edit"><label>Book Name</label><input type="text" id="fine-name" disabled></div>
+        <div class="form-group non-edit"><label>Serial No</label><input type="text" id="fine-serial" disabled></div>
+        <div class="form-group non-edit"><label>Issue Date</label><input type="date" id="fine-issue-date" disabled></div>
+        <div class="form-group non-edit"><label>Return Date (Expected)</label><input type="date" id="fine-return-date" disabled></div>
+        <div class="form-group non-edit"><label>Actual Return Date</label><input type="date" id="fine-actual-return" disabled></div>
+        <div class="form-group non-edit"><label>Fine Calculated (Rs 5/day)</label><input type="text" id="fine-calculated" value="0" disabled></div>
+        <div class="form-group full">
+          <label>Fine Paid</label>
+          <label class="check-label"><input type="checkbox" id="fine-paid"> Mark as Fine Paid</label>
+        </div>
+        <div class="form-group full">
+          <label>Remarks (Optional)</label>
+          <textarea id="fine-remarks"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="confirmFine()">Confirm & Complete Return</button>
+      <button class="btn btn-outline" style="margin-left:10px" onclick="cancelTx()">Cancel</button>
+    </div>
+  `;
+  return wrap;
+};
+
+function confirmFine() {
+  const fineVal = document.getElementById('fine-calculated').value;
+  const hasFine = fineVal && fineVal !== '0';
+  const paid = document.getElementById('fine-paid').checked;
+  if (hasFine && !paid) {
+    showAlertMsg('fine-alert','Please check "Fine Paid" before completing the return, or the book cannot be returned until fine is paid.');
+    return;
+  }
+  const serial = document.getElementById('fine-serial').value;
+  const issue = DB.issues.find(i=>i.serial===serial&&i._pendingReturn);
+  if (issue) { issue.status='returned'; issue._pendingReturn=false; }
+  const book = DB.books.find(b=>b.serial===serial);
+  if (book) book.status='Available';
+  showConfirmation('Return Completed!', 'Book returned successfully.' + (hasFine?' Fine collected.':''));
+}
+
+// REPORTS
+sections['report-books'] = () => buildBookReport('book','Master List of Books',['Serial No','Name','Author','Category','Status','Cost','Procured']);
+sections['report-movies'] = () => buildBookReport('movie','Master List of Movies',['Serial No','Name','Author/Director','Category','Status','Cost','Procured']);
+
+function buildBookReport(type, title, cols) {
+  const wrap = div('');
+  const items = DB.books.filter(b=>b.type===type);
+  let rows = items.map(b => `<tr>
+    <td>${b.serial}</td><td>${b.name}</td><td>${b.author}</td>
+    <td><span class="cat-badge">${b.category}</span></td>
+    <td>${statusBadge(b.status)}</td>
+    <td>₹${b.cost}</td><td>${b.procDate}</td>
+  </tr>`).join('');
+  wrap.innerHTML = `<div class="content-header"><div class="content-title">${title}</div></div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">No records found</td></tr>'}</tbody>
+    </table></div></div>`;
+  return wrap;
+}
+
+sections['report-memberships'] = () => {
+  const wrap = div('');
+  let rows = DB.memberships.map(m=>`<tr>
+    <td>${m.id}</td><td>${m.firstName} ${m.lastName}</td><td>${m.contact}</td>
+    <td>${m.address}</td><td>${m.aadhar}</td><td>${m.start}</td><td>${m.end}</td>
+    <td>${statusBadge(m.status)}</td><td>${m.fine>0?`<span style="color:var(--error)">₹${m.fine}</span>`:'—'}</td>
+  </tr>`).join('');
+  wrap.innerHTML = `<div class="content-header"><div class="content-title">Master List of Memberships</div></div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Address</th><th>Aadhar</th><th>Start</th><th>End</th><th>Status</th><th>Fine</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div></div>`;
+  return wrap;
+};
+
+sections['report-active-issues'] = () => {
+  const wrap = div('');
+  const active = DB.issues.filter(i=>i.status==='active'||i.status==='overdue');
+  let rows = active.map(i=>`<tr class="${i.status==='overdue'?'fine-row':''}">
+    <td>${i.serial}</td><td>${i.bookName}</td><td>${i.memberId}</td>
+    <td>${i.issueDate}</td><td>${i.returnDate}</td>
+  </tr>`).join('');
+  wrap.innerHTML = `<div class="content-header"><div class="content-title">Active Issues</div></div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Serial No</th><th>Book/Movie</th><th>Membership ID</th><th>Issue Date</th><th>Return Date</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:var(--muted)">No active issues</td></tr>'}</tbody>
+    </table></div></div>`;
+  return wrap;
+};
+
+sections['report-overdue'] = () => {
+  const wrap = div('');
+  const overdue = DB.issues.filter(i=>i.status==='overdue'||(i.status==='active'&&daysDiff(i.returnDate,today())>0));
+  let rows = overdue.map(i=>`<tr class="fine-row">
+    <td>${i.serial}</td><td>${i.bookName}</td><td>${i.memberId}</td>
+    <td>${i.issueDate}</td><td>${i.returnDate}</td>
+    <td style="color:var(--error);font-weight:500">₹${calcFine(i.returnDate)}</td>
+  </tr>`).join('');
+  wrap.innerHTML = `<div class="content-header"><div class="content-title">Overdue Returns</div></div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Serial No</th><th>Book</th><th>Member ID</th><th>Issue Date</th><th>Expected Return</th><th>Fine</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="6" style="text-align:center;color:var(--muted)">No overdue returns 🎉</td></tr>'}</tbody>
+    </table></div></div>`;
+  return wrap;
+};
+
+sections['report-requests'] = () => {
+  const wrap = div('');
+  let rows = DB.requests.map(r=>`<tr>
+    <td>${r.memberId}</td><td>${r.bookName}</td><td>${r.requestDate}</td>
+    <td>${r.fulfilledDate||'<span style="color:var(--warn)">Pending</span>'}</td>
+  </tr>`).join('');
+  wrap.innerHTML = `<div class="content-header"><div class="content-title">Issue Requests</div></div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Membership ID</th><th>Book/Movie</th><th>Requested Date</th><th>Fulfilled Date</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div></div>`;
+  return wrap;
+};
+
+// MAINTENANCE – ADD MEMBERSHIP
+sections['add-membership'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header"><div class="content-title">Add Membership</div></div>
+    <div id="addmem-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-grid">
+        ${formGroup('First Name', textInput('mem-fname','','First Name'), 'fg-mem-fname', false, 'Required')}
+        ${formGroup('Last Name', textInput('mem-lname','','Last Name'), 'fg-mem-lname', false, 'Required')}
+        ${formGroup('Contact Number', textInput('mem-contact','','Phone'), 'fg-mem-contact', false, 'Required')}
+        ${formGroup('Contact Address', textInput('mem-address','','Address'), 'fg-mem-address', false, 'Required')}
+        ${formGroup('Aadhar Card No', textInput('mem-aadhar','','XXXX-XXXX-XXXX'), 'fg-mem-aadhar', false, 'Required')}
+        ${formGroup('Start Date', dateInput('mem-start', today()), 'fg-mem-start', false, 'Required')}
+        ${formGroup('End Date', dateInput('mem-end', addDays(today(),180)), 'fg-mem-end', false, 'Required')}
+      </div>
+      <div class="form-group" id="fg-mem-duration">
+        <label>Membership Duration</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="mem-dur" value="6months" checked> 6 Months</label>
+          <label class="radio-label"><input type="radio" name="mem-dur" value="1year"> 1 Year</label>
+          <label class="radio-label"><input type="radio" name="mem-dur" value="2years"> 2 Years</label>
+        </div>
+      </div>
+      <button class="btn btn-gold" style="margin-top:16px" onclick="submitAddMembership()">Add Membership</button>
+    </div>
+  `;
+  document.querySelectorAll('input[name="mem-dur"]').forEach(r => {
+    r.addEventListener('change', function() {
+      const days = {'6months':180,'1year':365,'2years':730};
+      const start = document.getElementById('mem-start').value || today();
+      document.getElementById('mem-end').value = addDays(start, days[this.value]);
+    });
+  });
+  document.getElementById('mem-start').addEventListener('change', function() {
+    const dur = document.querySelector('input[name="mem-dur"]:checked')?.value||'6months';
+    const days = {'6months':180,'1year':365,'2years':730};
+    document.getElementById('mem-end').value = addDays(this.value, days[dur]);
+  });
+  return wrap;
+};
+
+function submitAddMembership() {
+  const fields = [['fg-mem-fname','mem-fname'],['fg-mem-lname','mem-lname'],['fg-mem-contact','mem-contact'],['fg-mem-address','mem-address'],['fg-mem-aadhar','mem-aadhar'],['fg-mem-start','mem-start'],['fg-mem-end','mem-end']];
+  let ok=true;
+  fields.forEach(([fid,iid])=>{ const v=document.getElementById(iid)?.value; setFieldError(fid,!v); if(!v)ok=false; });
+  if(!ok){showAlertMsg('addmem-alert','Please fill all required fields.');return;}
+  const dur = document.querySelector('input[name="mem-dur"]:checked')?.value||'6months';
+  const mem = {
+    id: nextId('MEM', DB.memberships),
+    firstName: document.getElementById('mem-fname').value,
+    lastName: document.getElementById('mem-lname').value,
+    contact: document.getElementById('mem-contact').value,
+    address: document.getElementById('mem-address').value,
+    aadhar: document.getElementById('mem-aadhar').value,
+    start: document.getElementById('mem-start').value,
+    end: document.getElementById('mem-end').value,
+    duration: dur, status:'Active', fine:0
+  };
+  DB.memberships.push(mem);
+  showConfirmation('Membership Added!', `New membership ${mem.id} created for ${mem.firstName} ${mem.lastName}.`);
+}
+
+// MAINTENANCE – UPDATE MEMBERSHIP
+sections['update-membership'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header"><div class="content-title">Update Membership</div></div>
+    <div id="updmem-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="form-group" id="fg-upd-memid">
+          <label>Membership Number (Mandatory)</label>
+          ${selectInput('upd-memid', DB.memberships.map(m=>m.id))}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group non-edit"><label>Member Name</label><input type="text" id="upd-name" disabled></div>
+        <div class="form-group non-edit"><label>Start Date</label><input type="date" id="upd-start" disabled></div>
+        <div class="form-group non-edit"><label>Current End Date</label><input type="date" id="upd-end" disabled></div>
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>Membership Extension</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="upd-ext" value="6months" checked> 6 Months</label>
+          <label class="radio-label"><input type="radio" name="upd-ext" value="1year"> 1 Year</label>
+          <label class="radio-label"><input type="radio" name="upd-ext" value="2years"> 2 Years</label>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Membership Remove</label>
+        <label class="check-label"><input type="checkbox" id="upd-remove"> Cancel / Deactivate Membership</label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-gold" onclick="submitUpdateMembership()">Update Membership</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('upd-memid').addEventListener('change', function() {
+    const m = DB.memberships.find(x=>x.id===this.value);
+    if(m){
+      document.getElementById('upd-name').value = m.firstName+' '+m.lastName;
+      document.getElementById('upd-start').value = m.start;
+      document.getElementById('upd-end').value = m.end;
+    }
+  });
+  return wrap;
+};
+
+function submitUpdateMembership() {
+  const id = document.getElementById('upd-memid').value;
+  if (!id) { setFieldError('fg-upd-memid',true); return; }
+  const m = DB.memberships.find(x=>x.id===id);
+  if (!m) return;
+  const remove = document.getElementById('upd-remove').checked;
+  if (remove) {
+    m.status = 'Inactive';
+    showConfirmation('Membership Cancelled', `Membership ${id} has been deactivated.`);
+    return;
+  }
+  const dur = document.querySelector('input[name="upd-ext"]:checked')?.value||'6months';
+  const days = {'6months':180,'1year':365,'2years':730};
+  m.end = addDays(m.end, days[dur]);
+  showConfirmation('Membership Extended', `${id} extended to ${m.end}.`);
+}
+
+// MAINTENANCE – ADD BOOK
+sections['add-book'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header"><div class="content-title">Add Book / Movie</div></div>
+    <div id="addbook-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-group">
+        <label>Type</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="add-type" value="book" checked> Book</label>
+          <label class="radio-label"><input type="radio" name="add-type" value="movie"> Movie</label>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:16px">
+        ${formGroup('Book / Movie Name', textInput('add-bname'), 'fg-add-bname', false, 'Required')}
+        ${formGroup('Author / Director', textInput('add-author'), 'fg-add-author', false, 'Required')}
+        ${formGroup('Category', selectInput('add-cat', DB.categories), 'fg-add-cat', false, 'Required')}
+        ${formGroup('Date of Procurement', dateInput('add-proc', today()), 'fg-add-proc', false, 'Required')}
+        ${formGroup('Cost (₹)', textInput('add-cost','','e.g. 350'), 'fg-add-cost', false, 'Required')}
+        ${formGroup('Quantity / Copies', `<input type="number" id="add-qty" value="1" min="1">`, 'fg-add-qty', false, 'Required')}
+      </div>
+      <button class="btn btn-gold" style="margin-top:16px" onclick="submitAddBook()">Add Book / Movie</button>
+    </div>
+  `;
+  return wrap;
+};
+
+function submitAddBook() {
+  const fields = [['fg-add-bname','add-bname'],['fg-add-author','add-author'],['fg-add-cat','add-cat'],['fg-add-proc','add-proc'],['fg-add-cost','add-cost']];
+  let ok=true;
+  fields.forEach(([fid,iid])=>{ const v=document.getElementById(iid)?.value; setFieldError(fid,!v); if(!v)ok=false; });
+  if(!ok){showAlertMsg('addbook-alert','All fields are required.');return;}
+  const type = document.querySelector('input[name="add-type"]:checked')?.value||'book';
+  const cat = document.getElementById('add-cat').value;
+  const qty = parseInt(document.getElementById('add-qty').value)||1;
+  const prefix = {Science:'SC',Economics:'EC',Fiction:'FC',Children:'CH','Personal Development':'PD'}[cat]||'SC';
+  const existing = DB.books.filter(b=>b.serial.startsWith(prefix+'('+type[0].toUpperCase()+')'));
+  for (let i=0;i<qty;i++) {
+    const num = String(existing.length + i + 1).padStart(6,'0');
+    DB.books.push({
+      serial: `${prefix}(${type[0].toUpperCase()})${num}`,
+      name: document.getElementById('add-bname').value,
+      author: document.getElementById('add-author').value,
+      category: cat, type,
+      status: 'Available',
+      cost: parseInt(document.getElementById('add-cost').value)||0,
+      procDate: document.getElementById('add-proc').value
+    });
+  }
+  showConfirmation('Book/Movie Added!', `${qty} copy(ies) of "${document.getElementById('add-bname').value}" added successfully.`);
+}
+
+// MAINTENANCE – UPDATE BOOK
+sections['update-book'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header"><div class="content-title">Update Book / Movie</div></div>
+    <div id="updbook-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-group">
+        <label>Type</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="upd-btype" value="book" checked> Book</label>
+          <label class="radio-label"><input type="radio" name="upd-btype" value="movie"> Movie</label>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:16px">
+        <div class="form-group" id="fg-upd-bname">
+          <label>Book / Movie Name</label>
+          ${selectInput('upd-bname', [...new Set(DB.books.map(b=>b.name))])}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group" id="fg-upd-bserial">
+          <label>Serial No</label>
+          ${selectInput('upd-bserial', DB.books.map(b=>b.serial))}
+          <span class="form-error">Required</span>
+        </div>
+        <div class="form-group" id="fg-upd-bstatus">
+          <label>Status</label>
+          ${selectInput('upd-bstatus', ['Available','Issued','Damaged','Lost'])}
+          <span class="form-error">Required</span>
+        </div>
+        ${formGroup('Date Updated', dateInput('upd-bdate', today()), 'fg-upd-bdate')}
+      </div>
+      <button class="btn btn-gold" style="margin-top:16px" onclick="submitUpdateBook()">Update</button>
+    </div>
+  `;
+  document.getElementById('upd-bname').addEventListener('change', function() {
+    const serials = DB.books.filter(b=>b.name===this.value).map(b=>b.serial);
+    const sel = document.getElementById('upd-bserial');
+    sel.innerHTML = '<option value="">-- Select --</option>'+serials.map(s=>`<option value="${s}">${s}</option>`).join('');
+  });
+  document.getElementById('upd-bserial').addEventListener('change', function() {
+    const b = DB.books.find(x=>x.serial===this.value);
+    if(b) document.getElementById('upd-bstatus').value = b.status;
+  });
+  return wrap;
+};
+
+function submitUpdateBook() {
+  const name = document.getElementById('upd-bname').value;
+  const serial = document.getElementById('upd-bserial').value;
+  const status = document.getElementById('upd-bstatus').value;
+  let ok=true;
+  [['fg-upd-bname',name],['fg-upd-bserial',serial],['fg-upd-bstatus',status]].forEach(([id,v])=>{setFieldError(id,!v);if(!v)ok=false;});
+  if(!ok){showAlertMsg('updbook-alert','All fields are required.');return;}
+  const book = DB.books.find(b=>b.serial===serial);
+  if(book) book.status=status;
+  showConfirmation('Book Updated!',`${name} (${serial}) status changed to ${status}.`);
+}
+
+// MAINTENANCE – USER MANAGEMENT
+sections['user-management'] = () => {
+  const wrap = div('');
+  wrap.innerHTML = `
+    <div class="content-header"><div class="content-title">User Management</div></div>
+    <div id="usermgmt-alert" class="alert alert-error"></div>
+    <div class="card">
+      <div class="form-group">
+        <label>Select Mode</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="usr-mode" value="new" checked> New User</label>
+          <label class="radio-label"><input type="radio" name="usr-mode" value="existing"> Existing User</label>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-top:16px" id="user-fields">
+        ${formGroup('Name', textInput('usr-name'), 'fg-usr-name', false, 'Required')}
+        ${formGroup('User ID', textInput('usr-id'), 'fg-usr-id', false, 'Required')}
+        ${formGroup('Password', '<input type="password" id="usr-pass">', 'fg-usr-pass', false, 'Required')}
+      </div>
+      <div class="form-group" style="margin-top:8px">
+        <label>Status</label>
+        <label class="check-label"><input type="checkbox" id="usr-active" checked> Active</label>
+      </div>
+      <div class="form-group">
+        <label>Admin Access</label>
+        <label class="check-label" title="Unselecting implies not an admin"><input type="checkbox" id="usr-admin"> Grant Admin Access</label>
+      </div>
+      <button class="btn btn-gold" style="margin-top:16px" onclick="submitUserMgmt()">Save User</button>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="card-title">Current Users</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Status</th></tr></thead>
+        <tbody id="users-table">${DB.users.map(u=>`<tr><td>${u.id}</td><td>${u.name}</td><td>${u.role}</td><td>${statusBadge(u.active?'Active':'Inactive')}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+  `;
+  return wrap;
+};
+
+function submitUserMgmt() {
+  const mode = document.querySelector('input[name="usr-mode"]:checked')?.value;
+  const name = document.getElementById('usr-name').value;
+  const id = document.getElementById('usr-id').value;
+  const pass = document.getElementById('usr-pass').value;
+  let ok=true;
+  [['fg-usr-name',name],['fg-usr-id',id],['fg-usr-pass',pass]].forEach(([fid,v])=>{setFieldError(fid,!v);if(!v)ok=false;});
+  if(!ok){showAlertMsg('usermgmt-alert','Name is required and all fields must be filled.');return;}
+  if (mode==='new') {
+    DB.users.push({ id, pass, name, role: document.getElementById('usr-admin').checked?'admin':'user', active: document.getElementById('usr-active').checked });
+  } else {
+    const u = DB.users.find(x=>x.id===id);
+    if (u) { u.name=name; u.pass=pass; u.active=document.getElementById('usr-active').checked; u.role=document.getElementById('usr-admin').checked?'admin':'user'; }
+  }
+  showConfirmation('User Saved!', `User "${name}" has been saved successfully.`);
+}
+
+// HELPERS
+function showAlertMsg(id, msg) {
+  const el = document.getElementById(id);
+  if(el){ el.textContent=msg; el.classList.add('show'); }
+}
+
+function showConfirmation(title, msg) {
+  const area = document.getElementById('content-area');
+  area.innerHTML = `
+    <div class="result-screen fade-in">
+      <div class="result-icon">✅</div>
+      <div class="result-title" style="color:var(--success)">${title}</div>
+      <div class="result-msg">${msg}</div>
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button class="btn btn-gold" onclick="navigate('home')">Go Home</button>
+        <button class="btn btn-outline" onclick="doLogout()">Log Out</button>
+      </div>
+    </div>`;
+}
+
+function cancelTx() {
+  const area = document.getElementById('content-area');
+  area.innerHTML = `
+    <div class="result-screen fade-in">
+      <div class="result-icon">❌</div>
+      <div class="result-title">Transaction Cancelled</div>
+      <div class="result-msg">The transaction was cancelled. No changes were made.</div>
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button class="btn btn-gold" onclick="navigate('home')">Go Home</button>
+        <button class="btn btn-outline" onclick="doLogout()">Log Out</button>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>
